@@ -38,6 +38,18 @@ async function createCategory(request, response) {
       .json({ error: "Nome e descrição são obrigatórios." });
   }
 
+  if (typeof name !== "string" || name.trim().length < 3) {
+    return response
+      .status(400)
+      .json({ error: "Nome de categoria deve ter pelo menos 3 caracteres." });
+  }
+
+  if (typeof description !== "string" || description.trim().length < 10) {
+    return response
+      .status(400)
+      .json({ error: "Descrição deve ter pelo menos 10 caracteres." });
+  }
+
   try {
     const existing = await database.query({
       text: "SELECT id FROM categories WHERE LOWER(name) = LOWER($1) LIMIT 1;",

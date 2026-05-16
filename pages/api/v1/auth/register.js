@@ -14,6 +14,22 @@ export default async function handler(request, response) {
       .json({ error: "Campos obrigatórios ausentes." });
   }
 
+  if (typeof name !== "string" || name.trim().length < 3) {
+    return response
+      .status(400)
+      .json({ error: "Nome deve ter pelo menos 3 caracteres." });
+  }
+
+  if (typeof email !== "string" || !email.includes("@")) {
+    return response.status(400).json({ error: "E-mail inválido." });
+  }
+
+  if (typeof password !== "string" || password.length < 6) {
+    return response
+      .status(400)
+      .json({ error: "Senha deve ter pelo menos 6 caracteres." });
+  }
+
   try {
     const emailLower = email.toLowerCase();
     const existingResult = await database.query({

@@ -93,6 +93,12 @@ async function createComment(request, response) {
       .json({ error: "postId e content são obrigatórios." });
   }
 
+  if (typeof content !== "string" || content.trim().length < 4) {
+    return response
+      .status(400)
+      .json({ error: "Comentário deve ter ao menos 4 caracteres." });
+  }
+
   try {
     const result = await database.query({
       text: `

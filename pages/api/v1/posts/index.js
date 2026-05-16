@@ -38,7 +38,10 @@ async function listPosts(request, response) {
     if (q) {
       const term = `%${q}%`;
       values.push(term);
-      queryText += values.length === 1 ? ` WHERE (p.title ILIKE $${values.length} OR p.content ILIKE $${values.length})` : ` AND (p.title ILIKE $${values.length} OR p.content ILIKE $${values.length})`;
+      queryText +=
+        values.length === 1
+          ? ` WHERE (p.title ILIKE $${values.length} OR p.content ILIKE $${values.length})`
+          : ` AND (p.title ILIKE $${values.length} OR p.content ILIKE $${values.length})`;
     }
 
     queryText += " ORDER BY p.created_at DESC;";
@@ -59,6 +62,32 @@ async function createPost(request, response) {
     return response.status(400).json({
       error: "Missing required fields: title and content",
     });
+  }
+
+  if (typeof title !== "string" || title.trim().length < 5) {
+    return response
+      .status(400)
+      .json({ error: "Título deve ter ao menos 5 caracteres." });
+  }
+
+  if (typeof content !== "string" || content.trim().length < 20) {
+    return response
+      .status(400)
+      .json({ error: "Conteúdo deve ter ao menos 20 caracteres." });
+  }
+
+  if (categoryId && typeof categoryId !== "string") {
+    return response.status(400).json({ error: "categoryId inválido." });
+  }
+
+  if (categoryId) {
+    const categoryCheck = await database.query({
+      text: "SELECT id FROM categories WHERE id = $1 LIMIT 1;",
+      values: [categoryId],
+    });
+    if (categoryCheck.rows.length === 0) {
+      return response.status(400).json({ error: "Categoria não encontrada." });
+    }
   }
 
   const effectiveAuthor = author || user?.name || "Anônimo";

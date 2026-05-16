@@ -93,10 +93,12 @@ export default function PostDetailPage() {
     setStatusMessage("");
 
     try {
+      const token = window.localStorage.getItem("forumdev_token");
       const response = await fetch(`/api/v1/posts/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({ title, content, author }),
       });

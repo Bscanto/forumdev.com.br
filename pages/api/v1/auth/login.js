@@ -14,6 +14,14 @@ export default async function handler(request, response) {
       .json({ error: "E-mail e senha são obrigatórios." });
   }
 
+  if (typeof email !== "string" || !email.includes("@")) {
+    return response.status(400).json({ error: "E-mail inválido." });
+  }
+
+  if (typeof password !== "string" || password.length < 6) {
+    return response.status(400).json({ error: "Senha inválida." });
+  }
+
   try {
     const emailLower = email.toLowerCase();
     const result = await database.query({
