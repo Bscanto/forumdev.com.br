@@ -1,5 +1,5 @@
-import database from "infra/database.js";
 import { getUserFromHeaders, userHasRole } from "infra/auth.js";
+import database from "infra/database.js";
 
 export default async function handler(request, response) {
   const { id } = request.query;
@@ -61,7 +61,10 @@ async function updatePost(id, request, response) {
       return response.status(404).json({ error: "Post not found" });
     }
     const ownerId = existing.rows[0].user_id;
-    if (!user || (user.id !== ownerId && !userHasRole(user, ["admin", "moderator"]))) {
+    if (
+      !user ||
+      (user.id !== ownerId && !userHasRole(user, ["admin", "moderator"]))
+    ) {
       return response.status(403).json({ error: "Não autorizado" });
     }
 
@@ -116,7 +119,10 @@ async function deletePost(id, request, response) {
       return response.status(404).json({ error: "Post not found" });
     }
     const ownerId = existing.rows[0].user_id;
-    if (!user || (user.id !== ownerId && !userHasRole(user, ["admin", "moderator"]))) {
+    if (
+      !user ||
+      (user.id !== ownerId && !userHasRole(user, ["admin", "moderator"]))
+    ) {
       return response.status(403).json({ error: "Não autorizado" });
     }
 

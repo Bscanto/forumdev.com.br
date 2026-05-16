@@ -7,7 +7,9 @@ const bcrypt = require("bcryptjs");
 
 async function run() {
   const name = process.env.SEED_ADMIN_NAME || "canto";
-  const email = (process.env.SEED_ADMIN_EMAIL || "bruno_scanto@hotmail.com").toLowerCase();
+  const email = (
+    process.env.SEED_ADMIN_EMAIL || "bruno_scanto@hotmail.com"
+  ).toLowerCase();
   const password = process.env.SEED_ADMIN_PASSWORD || "123456";
 
   const client = new Client({

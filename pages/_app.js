@@ -43,11 +43,19 @@ export default function App({ Component, pageProps }) {
           <Link href="/posts" style={styles.link}>
             Posts
           </Link>
+          <Link href="/search" style={styles.link}>
+            Buscar
+          </Link>
           <Link href="/categories" style={styles.link}>
             Categorias
           </Link>
           {user ? (
             <>
+              {user.role === "admin" && (
+                <Link href="/admin/users" style={styles.link}>
+                  Admin
+                </Link>
+              )}
               <Link href="/profile" style={styles.link}>
                 Perfil
               </Link>

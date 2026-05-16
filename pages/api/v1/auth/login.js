@@ -33,7 +33,12 @@ export default async function handler(request, response) {
 
     const token = signToken({ userId: user.id, role: user.role });
     response.status(200).json({
-      user: { id: user.id, name: user.name, email: user.email, role: user.role },
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
       token,
     });
   } catch (error) {

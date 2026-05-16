@@ -12,7 +12,7 @@ export default async function handler(request, response) {
 }
 
 async function listPosts(request, response) {
-  const { category } = request.query;
+  const { category, q } = request.query;
 
   try {
     let queryText = `
@@ -31,8 +31,14 @@ async function listPosts(request, response) {
     const values = [];
 
     if (category) {
-      queryText += " WHERE c.name = $1";
       values.push(category);
+      queryText += ` WHERE c.name = $${values.length}`;
+    }
+
+    if (q) {
+      const term = `%${q}%`;
+      values.push(term);
+      queryText += values.length === 1 ? ` WHERE (p.title ILIKE $${values.length} OR p.content ILIKE $${values.length})` : ` AND (p.title ILIKE $${values.length} OR p.content ILIKE $${values.length})`;
     }
 
     queryText += " ORDER BY p.created_at DESC;";

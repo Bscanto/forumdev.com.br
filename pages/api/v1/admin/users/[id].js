@@ -9,7 +9,9 @@ export default async function handler(request, response) {
 
   const requester = await getUserFromHeaders(request.headers);
   if (!requester || !userHasRole(requester, "admin")) {
-    return response.status(403).json({ error: "Apenas administradores podem alterar roles." });
+    return response
+      .status(403)
+      .json({ error: "Apenas administradores podem alterar roles." });
   }
 
   const { role } = request.body;

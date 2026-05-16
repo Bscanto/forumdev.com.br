@@ -1,6 +1,5 @@
-import { getUserFromHeaders } from "infra/auth.js";
+import { getUserFromHeaders, userHasRole } from "infra/auth.js";
 import database from "infra/database.js";
-import { userHasRole } from "infra/auth.js";
 
 export default async function handler(request, response) {
   if (request.method === "GET") {
@@ -34,7 +33,10 @@ async function deleteComment(request, response) {
       return response.status(404).json({ error: "Comentário não encontrado." });
     }
     const ownerId = existing.rows[0].user_id;
-    if (!user || (user.id !== ownerId && !userHasRole(user, ["admin", "moderator"]))) {
+    if (
+      !user ||
+      (user.id !== ownerId && !userHasRole(user, ["admin", "moderator"]))
+    ) {
       return response.status(403).json({ error: "Não autorizado." });
     }
 

@@ -202,11 +202,13 @@ export default function PostDetailPage() {
             <Link href="/posts" style={styles.linkButton}>
               Voltar para posts
             </Link>
-            {(user && (user.id === post.owner_id || ["admin", "moderator"].includes(user.role))) && (
-              <button style={styles.deleteButton} onClick={handleDelete}>
-                Excluir post
-              </button>
-            )}
+            {user &&
+              (user.id === post.owner_id ||
+                ["admin", "moderator"].includes(user.role)) && (
+                <button style={styles.deleteButton} onClick={handleDelete}>
+                  Excluir post
+                </button>
+              )}
           </div>
 
           <section style={styles.detailCard}>
@@ -221,19 +223,24 @@ export default function PostDetailPage() {
                 </div>
               </div>
               <div>
-                {(user && (user.id === post.owner_id || ["admin", "moderator"].includes(user.role))) && (
-                  <>
-                    <button
-                      onClick={() => setEditing((current) => !current)}
-                      style={styles.editButton}
-                    >
-                      {editing ? "Cancelar edição" : "Editar post"}
-                    </button>
-                    <button style={styles.deleteButton} onClick={handleDelete}>
-                      Excluir post
-                    </button>
-                  </>
-                )}
+                {user &&
+                  (user.id === post.owner_id ||
+                    ["admin", "moderator"].includes(user.role)) && (
+                    <>
+                      <button
+                        onClick={() => setEditing((current) => !current)}
+                        style={styles.editButton}
+                      >
+                        {editing ? "Cancelar edição" : "Editar post"}
+                      </button>
+                      <button
+                        style={styles.deleteButton}
+                        onClick={handleDelete}
+                      >
+                        Excluir post
+                      </button>
+                    </>
+                  )}
               </div>
             </div>
 
@@ -325,14 +332,19 @@ export default function PostDetailPage() {
                         <span>
                           {new Date(comment.created_at).toLocaleString()}
                         </span>
-                        {(user && (user.id === comment.owner_id || ["admin", "moderator"].includes(user.role))) && (
-                          <button
-                            onClick={() => handleDeleteComment(comment.id)}
-                            style={{ ...styles.deleteButton, marginLeft: "10px" }}
-                          >
-                            Apagar
-                          </button>
-                        )}
+                        {user &&
+                          (user.id === comment.owner_id ||
+                            ["admin", "moderator"].includes(user.role)) && (
+                            <button
+                              onClick={() => handleDeleteComment(comment.id)}
+                              style={{
+                                ...styles.deleteButton,
+                                marginLeft: "10px",
+                              }}
+                            >
+                              Apagar
+                            </button>
+                          )}
                       </div>
                     </div>
                     <p>{comment.content}</p>
