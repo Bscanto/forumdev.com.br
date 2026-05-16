@@ -74,8 +74,10 @@ export default function PostDetailPage() {
       return;
     }
     try {
+      const token = window.localStorage.getItem("forumdev_token");
       const response = await fetch(`/api/v1/posts/${id}`, {
         method: "DELETE",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (response.status !== 204) {
         throw new Error("Falha ao excluir o post.");
@@ -151,6 +153,24 @@ export default function PostDetailPage() {
     }
   }
 
+  async function handleDeleteComment(commentId) {
+    if (!window.confirm("Deseja realmente excluir este comentário?")) return;
+    try {
+      const token = window.localStorage.getItem("forumdev_token");
+      const response = await fetch(`/api/v1/comments?id=${commentId}`, {
+        method: "DELETE",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (response.status !== 204) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.error || "Falha ao excluir comentário.");
+      }
+      await loadComments();
+    } catch (error) {
+      setCommentStatus(error.message);
+    }
+  }
+
   if (isLoading) {
     return (
       <main style={styles.main}>
@@ -182,9 +202,11 @@ export default function PostDetailPage() {
             <Link href="/posts" style={styles.linkButton}>
               Voltar para posts
             </Link>
-            <button style={styles.deleteButton} onClick={handleDelete}>
-              Excluir post
-            </button>
+            {(user && (user.id === post.owner_id || ["admin", "moderator"].includes(user.role))) && (
+              <button style={styles.deleteButton} onClick={handleDelete}>
+                Excluir post
+              </button>
+            )}
           </div>
 
           <section style={styles.detailCard}>
@@ -198,6 +220,21 @@ export default function PostDetailPage() {
                   )}
                 </div>
               </div>
+              <div>
+                {(user && (user.id === post.owner_id || ["admin", "moderator"].includes(user.role))) && (
+                  <>
+                    <button
+                      onClick={() => setEditing((current) => !current)}
+                      style={styles.editButton}
+                    >
+                      {editing ? "Cancelar edição" : "Editar post"}
+                    </button>
+                    <button style={styles.deleteButton} onClick={handleDelete}>
+                      Excluir post
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
 
             <p style={styles.timestamp}>
@@ -206,12 +243,7 @@ export default function PostDetailPage() {
 
             <p style={styles.content}>{post.content}</p>
 
-            <button
-              onClick={() => setEditing((current) => !current)}
-              style={styles.editButton}
-            >
-              {editing ? "Cancelar edição" : "Editar post"}
-            </button>
+            {/** edição/controlos estão no header quando permitidos */}
 
             {editing && (
               <form onSubmit={handleSave} style={styles.form}>
@@ -289,9 +321,19 @@ export default function PostDetailPage() {
                   <article key={comment.id} style={styles.commentItem}>
                     <div style={styles.commentHeader}>
                       <strong>{comment.author || "Anônimo"}</strong>
-                      <span>
-                        {new Date(comment.created_at).toLocaleString()}
-                      </span>
+                      <div>
+                        <span>
+                          {new Date(comment.created_at).toLocaleString()}
+                        </span>
+                        {(user && (user.id === comment.owner_id || ["admin", "moderator"].includes(user.role))) && (
+                          <button
+                            onClick={() => handleDeleteComment(comment.id)}
+                            style={{ ...styles.deleteButton, marginLeft: "10px" }}
+                          >
+                            Apagar
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <p>{comment.content}</p>
                   </article>

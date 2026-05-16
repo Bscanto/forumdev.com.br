@@ -1,5 +1,6 @@
 import { getUserFromHeaders } from "infra/auth.js";
 import database from "infra/database.js";
+import { userHasRole } from "infra/auth.js";
 
 export default async function handler(request, response) {
   if (request.method === "GET") {
@@ -10,7 +11,43 @@ export default async function handler(request, response) {
     return createComment(request, response);
   }
 
+  if (request.method === "DELETE") {
+    return deleteComment(request, response);
+  }
+
   return response.status(405).end();
+}
+
+async function deleteComment(request, response) {
+  const user = await getUserFromHeaders(request.headers);
+  const { id } = request.query;
+  if (!id) {
+    return response.status(400).json({ error: "id é obrigatório." });
+  }
+
+  try {
+    const existing = await database.query({
+      text: "SELECT user_id FROM comments WHERE id = $1 LIMIT 1;",
+      values: [id],
+    });
+    if (existing.rows.length === 0) {
+      return response.status(404).json({ error: "Comentário não encontrado." });
+    }
+    const ownerId = existing.rows[0].user_id;
+    if (!user || (user.id !== ownerId && !userHasRole(user, ["admin", "moderator"]))) {
+      return response.status(403).json({ error: "Não autorizado." });
+    }
+
+    await database.query({
+      text: "DELETE FROM comments WHERE id = $1;",
+      values: [id],
+    });
+
+    return response.status(204).end();
+  } catch (error) {
+    console.error(error);
+    return response.status(500).json({ error: "Falha ao apagar comentário." });
+  }
 }
 
 async function listComments(request, response) {
@@ -23,7 +60,7 @@ async function listComments(request, response) {
     const result = await database.query({
       text: `
         SELECT c.id, c.post_id, c.content, c.created_at, c.updated_at,
-               u.name AS author
+               c.user_id AS owner_id, u.name AS author
           FROM comments c
           LEFT JOIN users u ON c.user_id = u.id
          WHERE c.post_id = $1

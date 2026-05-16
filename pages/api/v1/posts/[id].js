@@ -1,4 +1,5 @@
 import database from "infra/database.js";
+import { getUserFromHeaders, userHasRole } from "infra/auth.js";
 
 export default async function handler(request, response) {
   const { id } = request.query;
@@ -26,6 +27,7 @@ async function getPost(id, request, response) {
                p.created_at,
                p.updated_at,
                p.category_id,
+               p.user_id as owner_id,
                c.name AS category
           FROM posts p
           LEFT JOIN categories c ON p.category_id = c.id
@@ -47,8 +49,22 @@ async function getPost(id, request, response) {
 
 async function updatePost(id, request, response) {
   const { title, content, author, categoryId } = request.body;
+  const user = await getUserFromHeaders(request.headers);
 
   try {
+    // authorization: only owner or moderator/admin can update
+    const existing = await database.query({
+      text: "SELECT user_id FROM posts WHERE id = $1 LIMIT 1;",
+      values: [id],
+    });
+    if (existing.rows.length === 0) {
+      return response.status(404).json({ error: "Post not found" });
+    }
+    const ownerId = existing.rows[0].user_id;
+    if (!user || (user.id !== ownerId && !userHasRole(user, ["admin", "moderator"]))) {
+      return response.status(403).json({ error: "Não autorizado" });
+    }
+
     const result = await database.query({
       text: `
         UPDATE posts
@@ -90,7 +106,20 @@ async function updatePost(id, request, response) {
 }
 
 async function deletePost(id, request, response) {
+  const user = await getUserFromHeaders(request.headers);
   try {
+    const existing = await database.query({
+      text: "SELECT user_id FROM posts WHERE id = $1 LIMIT 1;",
+      values: [id],
+    });
+    if (existing.rows.length === 0) {
+      return response.status(404).json({ error: "Post not found" });
+    }
+    const ownerId = existing.rows[0].user_id;
+    if (!user || (user.id !== ownerId && !userHasRole(user, ["admin", "moderator"]))) {
+      return response.status(403).json({ error: "Não autorizado" });
+    }
+
     const result = await database.query({
       text: "DELETE FROM posts WHERE id = $1 RETURNING id;",
       values: [id],

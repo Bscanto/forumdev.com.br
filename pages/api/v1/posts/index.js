@@ -23,6 +23,7 @@ async function listPosts(request, response) {
              p.created_at,
              p.updated_at,
              p.category_id,
+             p.user_id as owner_id,
              c.name AS category
         FROM posts p
         LEFT JOIN categories c ON p.category_id = c.id

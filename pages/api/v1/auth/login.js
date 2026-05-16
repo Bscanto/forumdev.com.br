@@ -17,7 +17,7 @@ export default async function handler(request, response) {
   try {
     const emailLower = email.toLowerCase();
     const result = await database.query({
-      text: "SELECT id, name, email, password_hash FROM users WHERE email = $1 LIMIT 1;",
+      text: "SELECT id, name, email, password_hash, role FROM users WHERE email = $1 LIMIT 1;",
       values: [emailLower],
     });
 
@@ -31,9 +31,9 @@ export default async function handler(request, response) {
       return response.status(401).json({ error: "Credenciais inválidas." });
     }
 
-    const token = signToken({ userId: user.id });
+    const token = signToken({ userId: user.id, role: user.role });
     response.status(200).json({
-      user: { id: user.id, name: user.name, email: user.email },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role },
       token,
     });
   } catch (error) {

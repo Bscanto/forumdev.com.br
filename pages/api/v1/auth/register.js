@@ -27,12 +27,12 @@ export default async function handler(request, response) {
 
     const passwordHash = await hashPassword(password);
     const result = await database.query({
-      text: "INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email;",
-      values: [name, emailLower, passwordHash],
+      text: "INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role;",
+      values: [name, emailLower, passwordHash, "user"],
     });
 
     const user = result.rows[0];
-    const token = signToken({ userId: user.id });
+    const token = signToken({ userId: user.id, role: user.role });
 
     response.status(201).json({ user, token });
   } catch (error) {
