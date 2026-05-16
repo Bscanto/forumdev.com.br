@@ -19,8 +19,10 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "dotenv": "^16.4.4",
     "dotenv-expand": "^11.0.6",
+    "jsonwebtoken": "^9.0.2",
     "next": "^13.1.6",
     "node-pg-migrate": "^6.2.2",
     "pg": "^8.11.3",

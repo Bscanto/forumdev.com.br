@@ -10,6 +10,8 @@ const createJestConfig = nextJest({
 });
 const jestConfig = createJestConfig({
   moduleDirectories: ["node_modules", "<rootDir>"],
+  globalSetup: "<rootDir>/tests/jestGlobalSetup.js",
+  globalTeardown: "<rootDir>/tests/jestGlobalTeardown.js",
 });
 
 module.exports = jestConfig;
