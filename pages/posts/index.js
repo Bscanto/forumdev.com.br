@@ -8,6 +8,8 @@ export default function PostsPage() {
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryDescription, setNewCategoryDescription] = useState("");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [author, setAuthor] = useState("");
@@ -71,6 +73,47 @@ export default function PostsPage() {
 
     try {
       const token = window.localStorage.getItem("forumdev_token");
+      let categoryId = null;
+
+      if (newCategoryName) {
+        if (!token) {
+          setStatusMessage("Faça login para criar uma nova categoria.");
+          return;
+        }
+
+        if (!newCategoryDescription) {
+          setStatusMessage("Informe a descrição da nova categoria.");
+          return;
+        }
+
+        const createResponse = await fetch("/api/v1/categories", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            name: newCategoryName,
+            description: newCategoryDescription,
+          }),
+        });
+
+        const createBody = await createResponse.json();
+        if (!createResponse.ok) {
+          throw new Error(createBody.error || "Falha ao criar categoria.");
+        }
+
+        categoryId = createBody.id;
+        setCategories((current) => [...current, createBody]);
+        setSelectedCategory(createBody.name);
+        setNewCategoryName("");
+        setNewCategoryDescription("");
+      } else if (selectedCategory) {
+        categoryId = categories.find(
+          (category) => category.name === selectedCategory,
+        )?.id;
+      }
+
       const response = await fetch("/api/v1/posts", {
         method: "POST",
         headers: {
@@ -81,9 +124,7 @@ export default function PostsPage() {
           title,
           content,
           author: author || undefined,
-          categoryId: categories.find(
-            (category) => category.name === selectedCategory,
-          )?.id,
+          categoryId,
         }),
       });
 
@@ -95,7 +136,7 @@ export default function PostsPage() {
       setTitle("");
       setContent("");
       setStatusMessage("Post criado com sucesso!");
-      await loadPosts(selectedCategory);
+      await loadPosts(selectedCategory || newCategoryName || "");
     } catch (error) {
       setStatusMessage(error.message);
     }
@@ -179,6 +220,49 @@ export default function PostsPage() {
                   onChange={(event) => setContent(event.target.value)}
                   style={{ ...styles.input, minHeight: "140px" }}
                   placeholder="Escreva sua dúvida ou dica aqui"
+                />
+              </label>
+
+              <label style={styles.label}>
+                Categoria
+                <select
+                  value={selectedCategory}
+                  onChange={(event) => setSelectedCategory(event.target.value)}
+                  style={styles.input}
+                >
+                  <option value="">Sem categoria</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.name}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <p style={styles.helpText}>
+                Ou crie uma nova categoria ao publicar.
+              </p>
+
+              <label style={styles.label}>
+                Nova categoria
+                <input
+                  type="text"
+                  value={newCategoryName}
+                  onChange={(event) => setNewCategoryName(event.target.value)}
+                  style={styles.input}
+                  placeholder="Nome da categoria"
+                />
+              </label>
+
+              <label style={styles.label}>
+                Descrição da nova categoria
+                <textarea
+                  value={newCategoryDescription}
+                  onChange={(event) =>
+                    setNewCategoryDescription(event.target.value)
+                  }
+                  style={{ ...styles.input, minHeight: "100px" }}
+                  placeholder="Descreva por que essa categoria existe"
                 />
               </label>
 
@@ -308,6 +392,11 @@ const styles = {
     gap: "10px",
     color: "#cbd5e1",
     fontSize: "0.95rem",
+  },
+  helpText: {
+    margin: 0,
+    color: "#94a3b8",
+    fontSize: "0.9rem",
   },
   input: {
     width: "100%",
