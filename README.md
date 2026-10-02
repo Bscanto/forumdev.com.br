@@ -75,7 +75,7 @@
 
 ### Frontend
 
-- **Next.js 13** - React framework com SSR e SSG
+- **Next.js 15** - React framework com SSR e SSG
 - **React 18** - UI library
 - **JavaScript** - Linguagem de programação
 
@@ -83,7 +83,7 @@
 
 - **Next.js API Routes** - Serverless functions
 - **Node.js** - JavaScript runtime
-- **PostgreSQL 16** - Database relacional
+- **Supabase PostgreSQL 17** - Database relacional
 
 ### DevOps & Infrastructure
 
@@ -760,7 +760,7 @@ docker run -p 3000:3000 \
 
 **Vercel (produção atual)**
 
-O repositório está conectado diretamente à Vercel. Pull requests geram Preview Deployments e mudanças na branch `main` geram o deploy de produção. Configure `DATABASE_URL` (Neon) e `JWT_SECRET` nas variáveis de ambiente do projeto na Vercel.
+O repositório está conectado diretamente à Vercel. Pull requests geram Preview Deployments e mudanças na branch `main` geram o deploy de produção. Configure `DATABASE_URL` (Supabase) e `JWT_SECRET` nas variáveis de ambiente do projeto na Vercel.
 
 **Railway**
 
@@ -931,7 +931,6 @@ Desenvolvido com ❤️ pela comunidade ForumDev
 [⬆ Voltar ao topo](#forumdev---plataforma-comunitária-de-programação-e-tecnologia)
 
 </div>
-
 
 ## Banco de dados em produção
 
