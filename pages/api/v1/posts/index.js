@@ -8,7 +8,9 @@ export default async function handler(request, response) {
   if (request.method === "POST") {
     return createPost(request, response);
   }
-  return response.status(405).end();
+
+  response.setHeader("Allow", ["GET", "POST"]);
+  return response.status(405).json({ error: "Método não permitido." });
 }
 
 async function listPosts(request, response) {
@@ -23,46 +25,49 @@ async function listPosts(request, response) {
              p.created_at,
              p.updated_at,
              p.category_id,
-             p.user_id as owner_id,
+             p.user_id AS owner_id,
              c.name AS category
         FROM posts p
         LEFT JOIN categories c ON p.category_id = c.id
     `;
     const values = [];
+    const conditions = [];
 
     if (category) {
-      values.push(category);
-      queryText += ` WHERE c.name = $${values.length}`;
+      values.push(String(category));
+      conditions.push(`c.name = $${values.length}`);
     }
 
     if (q) {
-      const term = `%${q}%`;
-      values.push(term);
-      queryText +=
-        values.length === 1
-          ? ` WHERE (p.title ILIKE $${values.length} OR p.content ILIKE $${values.length})`
-          : ` AND (p.title ILIKE $${values.length} OR p.content ILIKE $${values.length})`;
+      values.push(`%${String(q).trim()}%`);
+      conditions.push(
+        `(p.title ILIKE $${values.length} OR p.content ILIKE $${values.length})`,
+      );
+    }
+
+    if (conditions.length > 0) {
+      queryText += ` WHERE ${conditions.join(" AND ")}`;
     }
 
     queryText += " ORDER BY p.created_at DESC;";
 
     const result = await database.query({ text: queryText, values });
-    response.status(200).json(result.rows);
+    return response.status(200).json(result.rows);
   } catch (error) {
     console.error(error);
-    response.status(500).json({ error: "Failed to fetch posts" });
+    return response.status(500).json({ error: "Falha ao buscar posts." });
   }
 }
 
 async function createPost(request, response) {
   const user = await getUserFromHeaders(request.headers);
-  const { title, content, author, categoryId } = request.body;
-
-  if (!title || !content) {
-    return response.status(400).json({
-      error: "Missing required fields: title and content",
-    });
+  if (!user) {
+    return response
+      .status(401)
+      .json({ error: "É necessário estar logado para publicar." });
   }
+
+  const { title, content, categoryId } = request.body || {};
 
   if (typeof title !== "string" || title.trim().length < 5) {
     return response
@@ -76,31 +81,35 @@ async function createPost(request, response) {
       .json({ error: "Conteúdo deve ter ao menos 20 caracteres." });
   }
 
-  if (categoryId && typeof categoryId !== "string") {
+  if (categoryId !== undefined && categoryId !== null && typeof categoryId !== "string") {
     return response.status(400).json({ error: "categoryId inválido." });
   }
 
-  if (categoryId) {
-    const categoryCheck = await database.query({
-      text: "SELECT id FROM categories WHERE id = $1 LIMIT 1;",
-      values: [categoryId],
-    });
-    if (categoryCheck.rows.length === 0) {
-      return response.status(400).json({ error: "Categoria não encontrada." });
-    }
-  }
-
-  const effectiveAuthor = author || user?.name || "Anônimo";
-  const userId = user?.id || null;
-
   try {
+    if (categoryId) {
+      const categoryCheck = await database.query({
+        text: "SELECT id FROM categories WHERE id = $1 LIMIT 1;",
+        values: [categoryId],
+      });
+
+      if (categoryCheck.rows.length === 0) {
+        return response.status(400).json({ error: "Categoria não encontrada." });
+      }
+    }
+
     const result = await database.query({
       text: `
         INSERT INTO posts (title, content, author, category_id, user_id)
         VALUES ($1, $2, $3, $4, $5)
-        RETURNING id, title, content, author, created_at, updated_at, category_id;
+        RETURNING id, title, content, author, created_at, updated_at, category_id, user_id AS owner_id;
       `,
-      values: [title, content, effectiveAuthor, categoryId || null, userId],
+      values: [
+        title.trim(),
+        content.trim(),
+        user.name,
+        categoryId || null,
+        user.id,
+      ],
     });
 
     const post = result.rows[0];
@@ -113,9 +122,9 @@ async function createPost(request, response) {
       post.category = categoryResult.rows[0]?.name || null;
     }
 
-    response.status(201).json(post);
+    return response.status(201).json(post);
   } catch (error) {
     console.error(error);
-    response.status(500).json({ error: "Failed to create post" });
+    return response.status(500).json({ error: "Falha ao criar post." });
   }
 }
