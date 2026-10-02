@@ -11,7 +11,7 @@ async function cleanDatabase() {
 }
 
 async function runMigrations() {
-  const response = await fetch("http://localhost:3000/api/v1/migrations", {
+  const response = await fetch("http://127.0.0.1:3000/api/v1/migrations", {
     method: "POST",
   });
 
@@ -22,7 +22,7 @@ async function runMigrations() {
 }
 
 async function registerUser(email) {
-  const response = await fetch("http://localhost:3000/api/v1/auth/register", {
+  const response = await fetch("http://127.0.0.1:3000/api/v1/auth/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -37,7 +37,7 @@ async function registerUser(email) {
 }
 
 test("GET /api/v1/posts should return empty array initially", async () => {
-  const response = await fetch("http://localhost:3000/api/v1/posts");
+  const response = await fetch("http://127.0.0.1:3000/api/v1/posts");
   expect(response.status).toBe(200);
 
   const responseBody = await response.json();
@@ -52,7 +52,7 @@ test("POST /api/v1/posts should create a new post", async () => {
     content: "Learn the basics of JavaScript programming",
   };
 
-  const response = await fetch("http://localhost:3000/api/v1/posts", {
+  const response = await fetch("http://127.0.0.1:3000/api/v1/posts", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -79,7 +79,7 @@ test("GET /api/v1/posts should return posts", async () => {
     content: "Deep dive into React hooks and performance",
   };
 
-  await fetch("http://localhost:3000/api/v1/posts", {
+  await fetch("http://127.0.0.1:3000/api/v1/posts", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -88,7 +88,7 @@ test("GET /api/v1/posts should return posts", async () => {
     body: JSON.stringify(newPost),
   });
 
-  const response = await fetch("http://localhost:3000/api/v1/posts");
+  const response = await fetch("http://127.0.0.1:3000/api/v1/posts");
   expect(response.status).toBe(200);
 
   const responseBody = await response.json();
@@ -102,7 +102,7 @@ test("POST /api/v1/posts should return 400 for missing fields", async () => {
     title: "Missing Content",
   };
 
-  const response = await fetch("http://localhost:3000/api/v1/posts", {
+  const response = await fetch("http://127.0.0.1:3000/api/v1/posts", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
