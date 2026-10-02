@@ -943,4 +943,4 @@ Arquitetura atual:
 GitHub -> Vercel -> Next.js/API -> Supabase PostgreSQL
 ```
 
-A migração do Neon está documentada em `docs/MIGRATION_SUPABASE.md`.
+A configuração do banco está documentada em `docs/SUPABASE.md`.
