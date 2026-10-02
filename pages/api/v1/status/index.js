@@ -36,13 +36,22 @@ async function status(request, response) {
       },
     });
   } catch (error) {
-    console.error("[status] database health check failed:", error.message);
+    const safeCode = error?.code || "UNKNOWN";
+    const safeName = error?.name || "Error";
+
+    console.error("[status] database health check failed:", {
+      name: safeName,
+      code: safeCode,
+      message: error?.message,
+    });
 
     return response.status(503).json({
       updated_at: new Date().toISOString(),
       dependencies: {
         database: {
           status: "unhealthy",
+          error_code: safeCode,
+          error_type: safeName,
         },
       },
     });
