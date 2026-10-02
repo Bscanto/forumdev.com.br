@@ -79,9 +79,7 @@ export default function CategoriesPage() {
         <div style={styles.header}>
           <div>
             <h1 style={styles.title}>Categorias</h1>
-            <p style={styles.subtitle}>
-              Navegue pelos assuntos da comunidade.
-            </p>
+            <p style={styles.subtitle}>Navegue pelos assuntos da comunidade.</p>
           </div>
           <Link href="/posts" style={styles.linkButton}>
             Ver posts
