@@ -11,7 +11,7 @@ async function cleanDatabase() {
 }
 
 async function runMigrations() {
-  const response = await fetch("http://localhost:3000/api/v1/migrations", {
+  const response = await fetch("http://127.0.0.1:3000/api/v1/migrations", {
     method: "POST",
   });
 
@@ -22,7 +22,7 @@ async function runMigrations() {
 }
 
 test("GET /api/v1/categories should return default categories", async () => {
-  const response = await fetch("http://localhost:3000/api/v1/categories");
+  const response = await fetch("http://127.0.0.1:3000/api/v1/categories");
   expect(response.status).toBe(200);
   const body = await response.json();
   expect(Array.isArray(body)).toBe(true);
