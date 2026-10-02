@@ -70,9 +70,7 @@ async function run() {
       [name, email, passwordHash, "admin"],
     );
 
-    console.log(
-      `Usuário admin criado: ${email} (id=${insert.rows[0].id})`,
-    );
+    console.log(`Usuário admin criado: ${email} (id=${insert.rows[0].id})`);
   } finally {
     await client.end();
   }
