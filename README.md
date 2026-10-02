@@ -931,3 +931,16 @@ Desenvolvido com ❤️ pela comunidade ForumDev
 [⬆ Voltar ao topo](#forumdev---plataforma-comunitária-de-programação-e-tecnologia)
 
 </div>
+
+
+## Banco de dados em produção
+
+O ambiente de produção utiliza **Supabase PostgreSQL**. A aplicação continua acessando o banco através de `DATABASE_URL`, mantendo o backend independente do provedor.
+
+Arquitetura atual:
+
+```
+GitHub -> Vercel -> Next.js/API -> Supabase PostgreSQL
+```
+
+A migração do Neon está documentada em `docs/MIGRATION_SUPABASE.md`.
