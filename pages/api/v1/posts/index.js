@@ -81,7 +81,11 @@ async function createPost(request, response) {
       .json({ error: "Conteúdo deve ter ao menos 20 caracteres." });
   }
 
-  if (categoryId !== undefined && categoryId !== null && typeof categoryId !== "string") {
+  if (
+    categoryId !== undefined &&
+    categoryId !== null &&
+    typeof categoryId !== "string"
+  ) {
     return response.status(400).json({ error: "categoryId inválido." });
   }
 
