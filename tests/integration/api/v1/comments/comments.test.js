@@ -11,7 +11,7 @@ async function cleanDatabase() {
 }
 
 async function runMigrations() {
-  const response = await fetch("http://localhost:3000/api/v1/migrations", {
+  const response = await fetch("http://127.0.0.1:3000/api/v1/migrations", {
     method: "POST",
   });
 
@@ -23,7 +23,7 @@ async function runMigrations() {
 
 test("POST /api/v1/comments should create a comment when authorized", async () => {
   const registerResponse = await fetch(
-    "http://localhost:3000/api/v1/auth/register",
+    "http://127.0.0.1:3000/api/v1/auth/register",
     {
       method: "POST",
       headers: {
@@ -39,7 +39,7 @@ test("POST /api/v1/comments should create a comment when authorized", async () =
   expect(registerResponse.status).toBe(201);
   const registerBody = await registerResponse.json();
 
-  const postResponse = await fetch("http://localhost:3000/api/v1/posts", {
+  const postResponse = await fetch("http://127.0.0.1:3000/api/v1/posts", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -54,7 +54,7 @@ test("POST /api/v1/comments should create a comment when authorized", async () =
   expect(postResponse.status).toBe(201);
   const createdPost = await postResponse.json();
 
-  const commentResponse = await fetch("http://localhost:3000/api/v1/comments", {
+  const commentResponse = await fetch("http://127.0.0.1:3000/api/v1/comments", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
