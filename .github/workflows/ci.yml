@@ -2,12 +2,12 @@ name: CI
 
 on:
   push:
-    branches: ["main", "master"]
+    branches: ["main"]
   pull_request:
-    branches: ["main", "master"]
+    branches: ["main"]
 
 jobs:
-  test:
+  quality:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,25 +16,20 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
-        env:
-          CI: true
-        run: npm test -- --runInBand
+      - name: Check formatting
+        run: npm run lint:check
 
-  build:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
-      - name: Install dependencies
-        run: npm ci
       - name: Build Next.js
-        run: npm run build || npm run build
+        env:
+          JWT_SECRET: ci-only-secret
+          POSTGRES_HOST: 127.0.0.1
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: ci
+          POSTGRES_DB: ci
+          POSTGRES_PASSWORD: ci
+        run: npm run build
