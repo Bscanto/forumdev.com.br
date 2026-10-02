@@ -43,11 +43,11 @@ test("POST /api/v1/comments should create a comment when authorized", async () =
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${registerBody.token}`,
     },
     body: JSON.stringify({
       title: "Post para comment",
       content: "Conteúdo do post para comentário.",
-      author: "Autor Teste",
     }),
   });
 
