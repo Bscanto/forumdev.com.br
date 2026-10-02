@@ -4,7 +4,7 @@
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Node](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen.svg)
+![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
 ![Docker](https://img.shields.io/badge/docker-required-blue.svg)
 
 **Uma plataforma de fórum moderna construída com Next.js, focada em discussões de Programação e Tecnologia.**
@@ -54,12 +54,11 @@
 ### Core Features
 
 - ✅ **Autenticação & Autorização** - JWT-based authentication com bcrypt password hashing
-- ✅ **Sistema de Usuários** - Profiles customizáveis com reputação e gamification
-- ✅ **Categorias & Tópicos** - Organização hierárquica de conteúdo
-- ✅ **Posts & Comentários** - Rich text support com markdown
-- ✅ **Search** - Busca full-text em posts e comentários
-- ✅ **Admin Panel** - Dashboard para gerenciamento de usuários e conteúdo
-- ✅ **Rate Limiting** - Proteção contra abuso
+- ✅ **Sistema de Usuários** - Cadastro, login, perfil e papéis de acesso
+- ✅ **Categorias** - Organização dos posts por assunto
+- ✅ **Posts & Comentários** - Criação, edição/autorização e comentários
+- ✅ **Search** - Busca por título e conteúdo dos posts
+- ✅ **Admin Panel** - Gerenciamento de papéis de usuários
 
 ### Funcionalidades Planejadas
 
@@ -103,7 +102,7 @@
 
 Antes de começar, certifique-se de que você possui:
 
-- **Node.js** >= 14.0.0 ([Download](https://nodejs.org/))
+- **Node.js** >= 18.0.0 ([Download](https://nodejs.org/))
 - **npm** >= 6.0.0 (incluído com Node.js)
 - **Docker** >= 20.10 ([Install Guide](https://docs.docker.com/get-docker/))
 - **Docker Compose** >= 1.29 ([Install Guide](https://docs.docker.com/compose/install/))
@@ -138,11 +137,13 @@ npm install
 
 ### 3. Configurar Variáveis de Ambiente
 
-Copie o arquivo `.env.development` e ajuste as variáveis conforme necessário:
+Crie o arquivo local de ambiente a partir do template:
 
 ```bash
-cp .env.development .env.development.local
+cp .env.example .env.development
 ```
+
+Nunca versione o arquivo `.env.development`.
 
 Veja [Variáveis de Ambiente](#variáveis-de-ambiente) para mais detalhes.
 
@@ -232,11 +233,11 @@ POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
 POSTGRES_USER=local_user
 POSTGRES_DB=local_db
-POSTGRES_PASSWORD=12345
-DATABASE_URL=postgres://local_user:12345@localhost:5432/local_db
+POSTGRES_PASSWORD=change-me
+DATABASE_URL=
 
 # Authentication
-JWT_SECRET=forumdev-secret-change-me
+JWT_SECRET=change-this-to-a-long-random-secret
 
 # Application
 NODE_ENV=development
@@ -249,10 +250,10 @@ NODE_ENV=development
 | `POSTGRES_HOST`     | Host do PostgreSQL         | `localhost`                         |
 | `POSTGRES_PORT`     | Porta do PostgreSQL        | `5432`                              |
 | `POSTGRES_USER`     | Usuário do PostgreSQL      | `local_user`                        |
-| `POSTGRES_PASSWORD` | Senha do PostgreSQL        | `12345`                             |
+| `POSTGRES_PASSWORD` | Senha do PostgreSQL        | valor local seguro                  |
 | `POSTGRES_DB`       | Nome do banco de dados     | `local_db`                          |
 | `DATABASE_URL`      | Connection string completa | `postgres://user:pass@host:port/db` |
-| `JWT_SECRET`        | Secret para JWT signing    | `your-secret-key`                   |
+| `JWT_SECRET`        | Secret para JWT signing    | segredo longo e aleatório           |
 | `NODE_ENV`          | Ambiente de execução       | `development`, `production`         |
 
 > ⚠️ **NUNCA** commite arquivos `.env` com valores sensíveis. Use `.env.example` para template.
@@ -757,12 +758,9 @@ docker run -p 3000:3000 \
 
 ### Deployment Platforms
 
-**Vercel (Recomendado para Next.js)**
+**Vercel (produção atual)**
 
-```bash
-npm install -g vercel
-vercel deploy
-```
+O repositório está conectado diretamente à Vercel. Pull requests geram Preview Deployments e mudanças na branch `main` geram o deploy de produção. Configure `DATABASE_URL` (Neon) e `JWT_SECRET` nas variáveis de ambiente do projeto na Vercel.
 
 **Railway**
 
@@ -922,7 +920,7 @@ Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICE
 
 Desenvolvido com ❤️ pela comunidade ForumDev
 
-**Última atualização:** Janeiro de 2024
+**Última atualização:** Outubro de 2026
 
 ---
 
