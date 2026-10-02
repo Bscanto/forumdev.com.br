@@ -11,7 +11,7 @@ async function cleanDatabase() {
 }
 
 async function runMigrations() {
-  const response = await fetch("http://localhost:3000/api/v1/migrations", {
+  const response = await fetch("http://127.0.0.1:3000/api/v1/migrations", {
     method: "POST",
   });
 
@@ -21,16 +21,32 @@ async function runMigrations() {
   }
 }
 
+async function registerUser(email) {
+  const response = await fetch("http://127.0.0.1:3000/api/v1/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: "Post Owner",
+      email,
+      password: "SenhaSegura123",
+    }),
+  });
+
+  expect(response.status).toBe(201);
+  return response.json();
+}
+
 test("PUT /api/v1/posts/:id should update an existing post", async () => {
-  const createResponse = await fetch("http://localhost:3000/api/v1/posts", {
+  const auth = await registerUser("post-update@example.com");
+  const createResponse = await fetch("http://127.0.0.1:3000/api/v1/posts", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${auth.token}`,
     },
     body: JSON.stringify({
       title: "Original Title",
-      content: "Original content.",
-      author: "Original Author",
+      content: "Original content long enough for validation.",
     }),
   });
 
@@ -38,15 +54,16 @@ test("PUT /api/v1/posts/:id should update an existing post", async () => {
   const createdPost = await createResponse.json();
 
   const updateResponse = await fetch(
-    `http://localhost:3000/api/v1/posts/${createdPost.id}`,
+    `http://127.0.0.1:3000/api/v1/posts/${createdPost.id}`,
     {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${auth.token}`,
       },
       body: JSON.stringify({
         title: "Updated Title",
-        content: "Updated content.",
+        content: "Updated content long enough for validation.",
       }),
     },
   );
@@ -56,23 +73,26 @@ test("PUT /api/v1/posts/:id should update an existing post", async () => {
 
   expect(updatedPost.id).toBe(createdPost.id);
   expect(updatedPost.title).toBe("Updated Title");
-  expect(updatedPost.content).toBe("Updated content.");
-  expect(updatedPost.author).toBe("Original Author");
+  expect(updatedPost.content).toBe(
+    "Updated content long enough for validation.",
+  );
+  expect(updatedPost.author).toBe(auth.user.name);
   expect(new Date(updatedPost.updated_at).getTime()).toBeGreaterThan(
     new Date(updatedPost.created_at).getTime() - 1,
   );
 });
 
 test("DELETE /api/v1/posts/:id should remove a post", async () => {
-  const createResponse = await fetch("http://localhost:3000/api/v1/posts", {
+  const auth = await registerUser("post-delete@example.com");
+  const createResponse = await fetch("http://127.0.0.1:3000/api/v1/posts", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${auth.token}`,
     },
     body: JSON.stringify({
       title: "Post to delete",
-      content: "This post will be removed.",
-      author: "Remover",
+      content: "This post will be removed after authorization.",
     }),
   });
 
@@ -80,16 +100,19 @@ test("DELETE /api/v1/posts/:id should remove a post", async () => {
   const createdPost = await createResponse.json();
 
   const deleteResponse = await fetch(
-    `http://localhost:3000/api/v1/posts/${createdPost.id}`,
+    `http://127.0.0.1:3000/api/v1/posts/${createdPost.id}`,
     {
       method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${auth.token}`,
+      },
     },
   );
 
   expect(deleteResponse.status).toBe(204);
 
   const getResponse = await fetch(
-    `http://localhost:3000/api/v1/posts/${createdPost.id}`,
+    `http://127.0.0.1:3000/api/v1/posts/${createdPost.id}`,
   );
   expect(getResponse.status).toBe(404);
 });

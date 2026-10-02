@@ -1,42 +1,45 @@
-import { getUserFromHeaders } from "infra/auth.js";
+import { getUserFromHeaders, userHasRole } from "infra/auth.js";
 import database from "infra/database.js";
 
 export default async function handler(request, response) {
   if (request.method === "GET") {
-    return listCategories(request, response);
+    return listCategories(response);
   }
 
   if (request.method === "POST") {
     return createCategory(request, response);
   }
 
-  return response.status(405).end();
+  response.setHeader("Allow", ["GET", "POST"]);
+  return response.status(405).json({ error: "Método não permitido." });
 }
 
-async function listCategories(request, response) {
+async function listCategories(response) {
   try {
     const result = await database.query({
       text: "SELECT id, name, description FROM categories ORDER BY name ASC;",
     });
-    response.status(200).json(result.rows);
+    return response.status(200).json(result.rows);
   } catch (error) {
     console.error(error);
-    response.status(500).json({ error: "Falha ao buscar categorias." });
+    return response.status(500).json({ error: "Falha ao buscar categorias." });
   }
 }
 
 async function createCategory(request, response) {
   const user = await getUserFromHeaders(request.headers);
+
   if (!user) {
     return response.status(401).json({ error: "Não autorizado." });
   }
 
-  const { name, description } = request.body;
-  if (!name || !description) {
+  if (!userHasRole(user, ["admin", "moderator"])) {
     return response
-      .status(400)
-      .json({ error: "Nome e descrição são obrigatórios." });
+      .status(403)
+      .json({ error: "Apenas moderadores podem criar categorias." });
   }
+
+  const { name, description } = request.body || {};
 
   if (typeof name !== "string" || name.trim().length < 3) {
     return response
@@ -51,9 +54,10 @@ async function createCategory(request, response) {
   }
 
   try {
+    const normalizedName = name.trim();
     const existing = await database.query({
       text: "SELECT id FROM categories WHERE LOWER(name) = LOWER($1) LIMIT 1;",
-      values: [name],
+      values: [normalizedName],
     });
 
     if (existing.rows.length > 0) {
@@ -62,12 +66,12 @@ async function createCategory(request, response) {
 
     const result = await database.query({
       text: "INSERT INTO categories (name, description) VALUES ($1, $2) RETURNING id, name, description;",
-      values: [name, description],
+      values: [normalizedName, description.trim()],
     });
 
-    response.status(201).json(result.rows[0]);
+    return response.status(201).json(result.rows[0]);
   } catch (error) {
     console.error(error);
-    response.status(500).json({ error: "Falha ao criar categoria." });
+    return response.status(500).json({ error: "Falha ao criar categoria." });
   }
 }

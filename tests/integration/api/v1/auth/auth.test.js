@@ -11,7 +11,7 @@ async function cleanDatabase() {
 }
 
 async function runMigrations() {
-  const response = await fetch("http://localhost:3000/api/v1/migrations", {
+  const response = await fetch("http://127.0.0.1:3000/api/v1/migrations", {
     method: "POST",
   });
 
@@ -23,7 +23,7 @@ async function runMigrations() {
 
 test("POST /api/v1/auth/register and /api/v1/auth/login should authenticate a user", async () => {
   const registration = await fetch(
-    "http://localhost:3000/api/v1/auth/register",
+    "http://127.0.0.1:3000/api/v1/auth/register",
     {
       method: "POST",
       headers: {
@@ -42,7 +42,7 @@ test("POST /api/v1/auth/register and /api/v1/auth/login should authenticate a us
   expect(registrationBody.user).toBeDefined();
   expect(registrationBody.token).toBeDefined();
 
-  const login = await fetch("http://localhost:3000/api/v1/auth/login", {
+  const login = await fetch("http://127.0.0.1:3000/api/v1/auth/login", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

@@ -11,7 +11,7 @@ async function cleanDatabase() {
 }
 
 async function runMigrations() {
-  const response = await fetch("http://localhost:3000/api/v1/migrations", {
+  const response = await fetch("http://127.0.0.1:3000/api/v1/migrations", {
     method: "POST",
   });
 
@@ -22,7 +22,7 @@ async function runMigrations() {
 }
 
 test("POST /api/v1/categories should require authentication", async () => {
-  const response = await fetch("http://localhost:3000/api/v1/categories", {
+  const response = await fetch("http://127.0.0.1:3000/api/v1/categories", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -34,9 +34,9 @@ test("POST /api/v1/categories should require authentication", async () => {
   expect(response.status).toBe(401);
 });
 
-test("POST /api/v1/categories should create a category when authenticated", async () => {
+test("POST /api/v1/categories should reject regular users", async () => {
   const registerResponse = await fetch(
-    "http://localhost:3000/api/v1/auth/register",
+    "http://127.0.0.1:3000/api/v1/auth/register",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -51,7 +51,7 @@ test("POST /api/v1/categories should create a category when authenticated", asyn
   const registerBody = await registerResponse.json();
   expect(registerBody.token).toBeDefined();
 
-  const response = await fetch("http://localhost:3000/api/v1/categories", {
+  const response = await fetch("http://127.0.0.1:3000/api/v1/categories", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -63,8 +63,44 @@ test("POST /api/v1/categories should create a category when authenticated", asyn
     }),
   });
 
+  expect(response.status).toBe(403);
+});
+
+test("POST /api/v1/categories should create a category for moderators", async () => {
+  const registerResponse = await fetch(
+    "http://127.0.0.1:3000/api/v1/auth/register",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "Moderator",
+        email: "moderator-category@example.com",
+        password: "SenhaForte123",
+      }),
+    },
+  );
+
+  expect(registerResponse.status).toBe(201);
+  const registerBody = await registerResponse.json();
+
+  await database.query({
+    text: "UPDATE users SET role = 'moderator' WHERE id = $1;",
+    values: [registerBody.user.id],
+  });
+
+  const response = await fetch("http://127.0.0.1:3000/api/v1/categories", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${registerBody.token}`,
+    },
+    body: JSON.stringify({
+      name: "DevOps Moderator",
+      description: "Infraestrutura, automação e operações.",
+    }),
+  });
+
   expect(response.status).toBe(201);
   const output = await response.json();
-  expect(output.name).toBe("DevOps");
-  expect(output.description).toBe("Infraestrutura e automação.");
+  expect(output.name).toBe("DevOps Moderator");
 });

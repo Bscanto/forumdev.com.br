@@ -15,7 +15,6 @@ export default function PostDetailPage() {
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [author, setAuthor] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
   const [commentStatus, setCommentStatus] = useState("");
 
@@ -46,7 +45,6 @@ export default function PostDetailPage() {
       setPost(data);
       setTitle(data.title);
       setContent(data.content);
-      setAuthor(data.author);
     } catch (error) {
       setError(error.message);
     } finally {
@@ -100,7 +98,7 @@ export default function PostDetailPage() {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ title, content, author }),
+        body: JSON.stringify({ title, content }),
       });
 
       if (!response.ok) {
@@ -272,16 +270,6 @@ export default function PostDetailPage() {
                     value={content}
                     onChange={(event) => setContent(event.target.value)}
                     style={{ ...styles.input, minHeight: "130px" }}
-                  />
-                </label>
-
-                <label style={styles.label}>
-                  Autor
-                  <input
-                    type="text"
-                    value={author}
-                    onChange={(event) => setAuthor(event.target.value)}
-                    style={styles.input}
                   />
                 </label>
 
