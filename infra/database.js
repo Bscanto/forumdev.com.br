@@ -24,7 +24,7 @@ async function getNewClient() {
 function getConnectionConfig() {
   const databaseUrl = process.env.DATABASE_URL;
 
-  if (databaseUrl && !databaseUrl.includes("$")) {
+  if (databaseUrl) {
     return {
       connectionString: databaseUrl,
       ssl: getSSLValue(),
