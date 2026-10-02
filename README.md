@@ -4,7 +4,7 @@
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
+![Node](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)
 ![Docker](https://img.shields.io/badge/docker-required-blue.svg)
 
 **Uma plataforma de fórum moderna construída com Next.js, focada em discussões de Programação e Tecnologia.**
@@ -102,7 +102,7 @@
 
 Antes de começar, certifique-se de que você possui:
 
-- **Node.js** >= 18.0.0 ([Download](https://nodejs.org/))
+- **Node.js** >= 22.0.0 ([Download](https://nodejs.org/))
 - **npm** >= 6.0.0 (incluído com Node.js)
 - **Docker** >= 20.10 ([Install Guide](https://docs.docker.com/get-docker/))
 - **Docker Compose** >= 1.29 ([Install Guide](https://docs.docker.com/compose/install/))
