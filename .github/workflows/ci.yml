@@ -9,6 +9,14 @@ on:
 jobs:
   quality:
     runs-on: ubuntu-latest
+    env:
+      JWT_SECRET: ci-only-secret-for-forumdev-tests
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: local_user
+      POSTGRES_DB: local_db
+      POSTGRES_PASSWORD: local_password
+
     steps:
       - uses: actions/checkout@v4
 
@@ -25,11 +33,7 @@ jobs:
         run: npm run lint:check
 
       - name: Build Next.js
-        env:
-          JWT_SECRET: ci-only-secret
-          POSTGRES_HOST: 127.0.0.1
-          POSTGRES_PORT: 5432
-          POSTGRES_USER: ci
-          POSTGRES_DB: ci
-          POSTGRES_PASSWORD: ci
         run: npm run build
+
+      - name: Run integration tests
+        run: npm test
