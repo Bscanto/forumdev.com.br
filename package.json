@@ -15,9 +15,9 @@
     "lint:fix": "prettier --write .",
     "test": "jest --runInBand",
     "test:watch": "jest --watchAll --runInBand",
-    "migration:create": "node-pg-migrate --migrations-dir infra/migrations create",
-    "migration:up": "node-pg-migrate --migrations-dir infra/migrations --envPath .env.development up",
-    "migration:down": "node-pg-migrate --migrations-dir infra/migrations --envPath .env.development down"
+    "migration:create": "node-pg-migrate create --migrations-dir infra/migrations",
+    "migration:up": "node-pg-migrate up --migrations-dir infra/migrations --envPath .env.development",
+    "migration:down": "node-pg-migrate down --migrations-dir infra/migrations --envPath .env.development"
   },
   "author": "",
   "license": "MIT",
@@ -27,13 +27,21 @@
     "dotenv-expand": "^11.0.6",
     "jsonwebtoken": "^9.0.2",
     "next": "15.5.27",
-    "node-pg-migrate": "^6.2.2",
-    "pg": "^8.11.3",
+    "node-pg-migrate": "9.0.0",
+    "pg": "8.23.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "jest": "^29.6.2",
+    "jest": "30.5.2",
     "prettier": "^3.8.0"
+  },
+  "engines": {
+    "node": ">=22 <25"
+  },
+  "overrides": {
+    "next": {
+      "postcss": "8.5.28"
+    }
   }
 }
