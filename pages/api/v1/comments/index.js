@@ -86,7 +86,7 @@ async function createComment(request, response) {
       .json({ error: "É necessário estar logado para comentar." });
   }
 
-  const { postId, content } = request.body;
+  const { postId, content } = request.body || {};
   if (!postId || !content) {
     return response
       .status(400)
@@ -100,13 +100,22 @@ async function createComment(request, response) {
   }
 
   try {
+    const post = await database.query({
+      text: "SELECT id FROM posts WHERE id = $1 LIMIT 1;",
+      values: [postId],
+    });
+
+    if (post.rows.length === 0) {
+      return response.status(404).json({ error: "Post não encontrado." });
+    }
+
     const result = await database.query({
       text: `
         INSERT INTO comments (post_id, user_id, content)
         VALUES ($1, $2, $3)
         RETURNING id, post_id, content, created_at, updated_at;
       `,
-      values: [postId, user.id, content],
+      values: [postId, user.id, content.trim()],
     });
 
     response.status(201).json(result.rows[0]);
