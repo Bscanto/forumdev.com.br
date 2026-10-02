@@ -11,7 +11,7 @@ async function cleanDatabase() {
 }
 
 async function runMigrations() {
-  const response = await fetch("http://localhost:3000/api/v1/migrations", {
+  const response = await fetch("http://127.0.0.1:3000/api/v1/migrations", {
     method: "POST",
   });
 
@@ -22,7 +22,7 @@ async function runMigrations() {
 }
 
 async function registerUser(email) {
-  const response = await fetch("http://localhost:3000/api/v1/auth/register", {
+  const response = await fetch("http://127.0.0.1:3000/api/v1/auth/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -38,7 +38,7 @@ async function registerUser(email) {
 
 test("PUT /api/v1/posts/:id should update an existing post", async () => {
   const auth = await registerUser("post-update@example.com");
-  const createResponse = await fetch("http://localhost:3000/api/v1/posts", {
+  const createResponse = await fetch("http://127.0.0.1:3000/api/v1/posts", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -54,7 +54,7 @@ test("PUT /api/v1/posts/:id should update an existing post", async () => {
   const createdPost = await createResponse.json();
 
   const updateResponse = await fetch(
-    `http://localhost:3000/api/v1/posts/${createdPost.id}`,
+    `http://127.0.0.1:3000/api/v1/posts/${createdPost.id}`,
     {
       method: "PUT",
       headers: {
@@ -84,7 +84,7 @@ test("PUT /api/v1/posts/:id should update an existing post", async () => {
 
 test("DELETE /api/v1/posts/:id should remove a post", async () => {
   const auth = await registerUser("post-delete@example.com");
-  const createResponse = await fetch("http://localhost:3000/api/v1/posts", {
+  const createResponse = await fetch("http://127.0.0.1:3000/api/v1/posts", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -100,7 +100,7 @@ test("DELETE /api/v1/posts/:id should remove a post", async () => {
   const createdPost = await createResponse.json();
 
   const deleteResponse = await fetch(
-    `http://localhost:3000/api/v1/posts/${createdPost.id}`,
+    `http://127.0.0.1:3000/api/v1/posts/${createdPost.id}`,
     {
       method: "DELETE",
       headers: {
@@ -112,7 +112,7 @@ test("DELETE /api/v1/posts/:id should remove a post", async () => {
   expect(deleteResponse.status).toBe(204);
 
   const getResponse = await fetch(
-    `http://localhost:3000/api/v1/posts/${createdPost.id}`,
+    `http://127.0.0.1:3000/api/v1/posts/${createdPost.id}`,
   );
   expect(getResponse.status).toBe(404);
 });
