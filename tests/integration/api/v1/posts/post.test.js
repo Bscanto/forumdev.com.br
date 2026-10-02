@@ -73,7 +73,9 @@ test("PUT /api/v1/posts/:id should update an existing post", async () => {
 
   expect(updatedPost.id).toBe(createdPost.id);
   expect(updatedPost.title).toBe("Updated Title");
-  expect(updatedPost.content).toBe("Updated content long enough for validation.");
+  expect(updatedPost.content).toBe(
+    "Updated content long enough for validation.",
+  );
   expect(updatedPost.author).toBe(auth.user.name);
   expect(new Date(updatedPost.updated_at).getTime()).toBeGreaterThan(
     new Date(updatedPost.created_at).getTime() - 1,
