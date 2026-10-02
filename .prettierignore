@@ -1,3 +1,2 @@
 .next
-pages/api/v1/posts/index.js
-pages/api/v1/posts/[id].js
+pages/api/v1/posts/
