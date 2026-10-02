@@ -11,7 +11,7 @@ async function cleanDatabase() {
 }
 
 async function runMigrations() {
-  const response = await fetch("http://localhost:3000/api/v1/migrations", {
+  const response = await fetch("http://127.0.0.1:3000/api/v1/migrations", {
     method: "POST",
   });
 
@@ -22,7 +22,7 @@ async function runMigrations() {
 }
 
 test("POST /api/v1/categories should require authentication", async () => {
-  const response = await fetch("http://localhost:3000/api/v1/categories", {
+  const response = await fetch("http://127.0.0.1:3000/api/v1/categories", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -36,7 +36,7 @@ test("POST /api/v1/categories should require authentication", async () => {
 
 test("POST /api/v1/categories should reject regular users", async () => {
   const registerResponse = await fetch(
-    "http://localhost:3000/api/v1/auth/register",
+    "http://127.0.0.1:3000/api/v1/auth/register",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -51,7 +51,7 @@ test("POST /api/v1/categories should reject regular users", async () => {
   const registerBody = await registerResponse.json();
   expect(registerBody.token).toBeDefined();
 
-  const response = await fetch("http://localhost:3000/api/v1/categories", {
+  const response = await fetch("http://127.0.0.1:3000/api/v1/categories", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -68,7 +68,7 @@ test("POST /api/v1/categories should reject regular users", async () => {
 
 test("POST /api/v1/categories should create a category for moderators", async () => {
   const registerResponse = await fetch(
-    "http://localhost:3000/api/v1/auth/register",
+    "http://127.0.0.1:3000/api/v1/auth/register",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -88,7 +88,7 @@ test("POST /api/v1/categories should create a category for moderators", async ()
     values: [registerBody.user.id],
   });
 
-  const response = await fetch("http://localhost:3000/api/v1/categories", {
+  const response = await fetch("http://127.0.0.1:3000/api/v1/categories", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
