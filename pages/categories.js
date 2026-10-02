@@ -8,9 +8,13 @@ export default function CategoriesPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
-  const [user, setUser] = useState(getStoredUser());
+  const [user, setUser] = useState(null);
+
+  const canManageCategories =
+    user && ["admin", "moderator"].includes(user.role);
 
   useEffect(() => {
+    setUser(getStoredUser());
     loadCategories();
   }, []);
 
@@ -18,9 +22,14 @@ export default function CategoriesPage() {
     try {
       const response = await fetch("/api/v1/categories");
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Falha ao carregar categorias.");
+      }
+
       setCategories(data);
     } catch (error) {
-      setStatusMessage("Falha ao carregar categorias.");
+      setStatusMessage(error.message);
     }
   }
 
@@ -28,14 +37,8 @@ export default function CategoriesPage() {
     event.preventDefault();
     setStatusMessage("");
 
-    if (!name || !description) {
-      setStatusMessage("Preencha nome e descrição.");
-      return;
-    }
-
-    const token = getToken();
-    if (!token) {
-      setStatusMessage("Você precisa entrar para criar uma categoria.");
+    if (!canManageCategories) {
+      setStatusMessage("Apenas moderadores podem criar categorias.");
       return;
     }
 
@@ -44,17 +47,20 @@ export default function CategoriesPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${getToken()}`,
         },
         body: JSON.stringify({ name, description }),
       });
 
       const body = await response.json();
+
       if (!response.ok) {
         throw new Error(body.error || "Falha ao criar categoria.");
       }
 
-      setCategories((current) => [...current, body]);
+      setCategories((current) =>
+        [...current, body].sort((a, b) => a.name.localeCompare(b.name)),
+      );
       setName("");
       setDescription("");
       setStatusMessage("Categoria criada com sucesso!");
@@ -72,10 +78,9 @@ export default function CategoriesPage() {
       <main style={styles.main}>
         <div style={styles.header}>
           <div>
-            <h1 style={styles.title}>Categorias dinâmicas</h1>
+            <h1 style={styles.title}>Categorias</h1>
             <p style={styles.subtitle}>
-              Veja todas as categorias do fórum e crie novas se já estiver
-              logado.
+              Navegue pelos assuntos da comunidade.
             </p>
           </div>
           <Link href="/posts" style={styles.linkButton}>
@@ -83,7 +88,7 @@ export default function CategoriesPage() {
           </Link>
         </div>
 
-        <section style={styles.grid}>
+        <section style={canManageCategories ? styles.grid : styles.singleGrid}>
           <article style={styles.categoriesCard}>
             <h2 style={styles.sectionTitle}>Todas as categorias</h2>
             <div style={styles.categoriesList}>
@@ -100,54 +105,49 @@ export default function CategoriesPage() {
             </div>
           </article>
 
-          <article style={styles.createCard}>
-            <h2 style={styles.sectionTitle}>Criar nova categoria</h2>
-            <form onSubmit={handleCreate} style={styles.form}>
-              <label style={styles.label}>
-                Nome
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  style={styles.input}
-                  placeholder="JavaScript"
-                />
-              </label>
+          {canManageCategories && (
+            <article style={styles.createCard}>
+              <h2 style={styles.sectionTitle}>Criar nova categoria</h2>
+              <form onSubmit={handleCreate} style={styles.form}>
+                <label style={styles.label}>
+                  Nome
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    style={styles.input}
+                    minLength={3}
+                    required
+                  />
+                </label>
 
-              <label style={styles.label}>
-                Descrição
-                <textarea
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                  style={{ ...styles.input, minHeight: "120px" }}
-                  placeholder="Descreva a categoria"
-                />
-              </label>
+                <label style={styles.label}>
+                  Descrição
+                  <textarea
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
+                    style={{ ...styles.input, minHeight: "120px" }}
+                    minLength={10}
+                    required
+                  />
+                </label>
 
-              <button type="submit" style={styles.button}>
-                Criar categoria
-              </button>
-              {statusMessage && <p style={styles.status}>{statusMessage}</p>}
-            </form>
-
-            {!user && (
-              <p style={styles.note}>
-                Faça login para adicionar novas categorias.
-              </p>
-            )}
-          </article>
+                <button type="submit" style={styles.button}>
+                  Criar categoria
+                </button>
+              </form>
+            </article>
+          )}
         </section>
+
+        {statusMessage && <p style={styles.status}>{statusMessage}</p>}
       </main>
     </>
   );
 }
 
 const styles = {
-  main: {
-    maxWidth: "1200px",
-    margin: "0 auto",
-    padding: "24px 0",
-  },
+  main: { maxWidth: "1200px", margin: "0 auto", padding: "24px 0" },
   header: {
     display: "flex",
     justifyContent: "space-between",
@@ -156,16 +156,8 @@ const styles = {
     gap: "20px",
     marginBottom: "24px",
   },
-  title: {
-    margin: 0,
-    fontSize: "2.2rem",
-    color: "#38bdf8",
-  },
-  subtitle: {
-    margin: "10px 0 0",
-    color: "#94a3b8",
-    maxWidth: "680px",
-  },
+  title: { margin: 0, fontSize: "2.2rem", color: "#38bdf8" },
+  subtitle: { margin: "10px 0 0", color: "#94a3b8", maxWidth: "680px" },
   linkButton: {
     padding: "12px 18px",
     borderRadius: "12px",
@@ -175,9 +167,10 @@ const styles = {
   },
   grid: {
     display: "grid",
-    gridTemplateColumns: "1.6fr 1fr",
+    gridTemplateColumns: "minmax(0, 1.6fr) minmax(280px, 1fr)",
     gap: "24px",
   },
+  singleGrid: { display: "grid", gridTemplateColumns: "1fr", gap: "24px" },
   categoriesCard: {
     padding: "28px",
     borderRadius: "20px",
@@ -195,23 +188,17 @@ const styles = {
     color: "#e2e8f0",
     fontSize: "1.4rem",
   },
-  categoriesList: {
-    display: "grid",
-    gap: "14px",
-  },
+  categoriesList: { display: "grid", gap: "14px" },
   categoryItem: {
     display: "block",
     padding: "18px",
     borderRadius: "16px",
     border: "1px solid #334155",
     backgroundColor: "#020617",
-    color: "#e5e8ff",
+    color: "#e5e7eb",
     textDecoration: "none",
   },
-  form: {
-    display: "grid",
-    gap: "18px",
-  },
+  form: { display: "grid", gap: "18px" },
   label: {
     display: "grid",
     gap: "10px",
@@ -221,7 +208,7 @@ const styles = {
   input: {
     width: "100%",
     backgroundColor: "#020617",
-    color: "#e2e8ff",
+    color: "#e2e8f0",
     border: "1px solid #334155",
     borderRadius: "14px",
     padding: "14px 16px",
@@ -234,13 +221,5 @@ const styles = {
     color: "#020617",
     cursor: "pointer",
   },
-  status: {
-    marginTop: "12px",
-    color: "#a5f3fc",
-  },
-  note: {
-    marginTop: "16px",
-    color: "#94a3b8",
-    lineHeight: 1.7,
-  },
+  status: { marginTop: "16px", color: "#a5f3fc" },
 };
