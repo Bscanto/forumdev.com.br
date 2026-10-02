@@ -58,7 +58,10 @@ async function updatePost(id, request, response) {
 
   const { title, content, categoryId } = request.body || {};
 
-  if (title !== undefined && (typeof title !== "string" || title.trim().length < 5)) {
+  if (
+    title !== undefined &&
+    (typeof title !== "string" || title.trim().length < 5)
+  ) {
     return response
       .status(400)
       .json({ error: "Título deve ter ao menos 5 caracteres." });
@@ -84,10 +87,7 @@ async function updatePost(id, request, response) {
     }
 
     const ownerId = existing.rows[0].user_id;
-    if (
-      user.id !== ownerId &&
-      !userHasRole(user, ["admin", "moderator"])
-    ) {
+    if (user.id !== ownerId && !userHasRole(user, ["admin", "moderator"])) {
       return response.status(403).json({ error: "Não autorizado." });
     }
 
