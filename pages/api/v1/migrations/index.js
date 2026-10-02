@@ -33,7 +33,9 @@ export default async function migration(request, response) {
     return response.status(200).json(migrations);
   } catch (error) {
     console.error("[migrations] failed:", error.message);
-    return response.status(500).json({ error: "Falha ao executar migrations." });
+    return response
+      .status(500)
+      .json({ error: "Falha ao executar migrations." });
   } finally {
     await dbClient.end();
   }
