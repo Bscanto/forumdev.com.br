@@ -5,7 +5,7 @@ export default async function handler(request, response) {
   const { id } = request.query;
 
   if (request.method === "GET") {
-    return getPost(id, request, response);
+    return getPost(id, response);
   }
   if (request.method === "PUT") {
     return updatePost(id, request, response);
@@ -13,10 +13,12 @@ export default async function handler(request, response) {
   if (request.method === "DELETE") {
     return deletePost(id, request, response);
   }
-  return response.status(405).end();
+
+  response.setHeader("Allow", ["GET", "PUT", "DELETE"]);
+  return response.status(405).json({ error: "Método não permitido." });
 }
 
-async function getPost(id, request, response) {
+async function getPost(id, response) {
   try {
     const result = await database.query({
       text: `
@@ -27,7 +29,7 @@ async function getPost(id, request, response) {
                p.created_at,
                p.updated_at,
                p.category_id,
-               p.user_id as owner_id,
+               p.user_id AS owner_id,
                c.name AS category
           FROM posts p
           LEFT JOIN categories c ON p.category_id = c.id
@@ -37,35 +39,67 @@ async function getPost(id, request, response) {
     });
 
     if (result.rows.length === 0) {
-      return response.status(404).json({ error: "Post not found" });
+      return response.status(404).json({ error: "Post não encontrado." });
     }
 
-    response.status(200).json(result.rows[0]);
+    return response.status(200).json(result.rows[0]);
   } catch (error) {
     console.error(error);
-    response.status(500).json({ error: "Failed to fetch post" });
+    return response.status(500).json({ error: "Falha ao buscar post." });
   }
 }
 
 async function updatePost(id, request, response) {
-  const { title, content, author, categoryId } = request.body;
   const user = await getUserFromHeaders(request.headers);
 
+  if (!user) {
+    return response.status(401).json({ error: "Não autorizado." });
+  }
+
+  const { title, content, categoryId } = request.body || {};
+
+  if (title !== undefined && (typeof title !== "string" || title.trim().length < 5)) {
+    return response
+      .status(400)
+      .json({ error: "Título deve ter ao menos 5 caracteres." });
+  }
+
+  if (
+    content !== undefined &&
+    (typeof content !== "string" || content.trim().length < 20)
+  ) {
+    return response
+      .status(400)
+      .json({ error: "Conteúdo deve ter ao menos 20 caracteres." });
+  }
+
   try {
-    // authorization: only owner or moderator/admin can update
     const existing = await database.query({
       text: "SELECT user_id FROM posts WHERE id = $1 LIMIT 1;",
       values: [id],
     });
+
     if (existing.rows.length === 0) {
-      return response.status(404).json({ error: "Post not found" });
+      return response.status(404).json({ error: "Post não encontrado." });
     }
+
     const ownerId = existing.rows[0].user_id;
     if (
-      !user ||
-      (user.id !== ownerId && !userHasRole(user, ["admin", "moderator"]))
+      user.id !== ownerId &&
+      !userHasRole(user, ["admin", "moderator"])
     ) {
-      return response.status(403).json({ error: "Não autorizado" });
+      return response.status(403).json({ error: "Não autorizado." });
+    }
+
+    if (categoryId) {
+      const category = await database.query({
+        text: "SELECT id FROM categories WHERE id = $1 LIMIT 1;",
+        values: [categoryId],
+      });
+
+      if (category.rows.length === 0) {
+        return response.status(400).json({ error: "Categoria não encontrada." });
+      }
     }
 
     const result = await database.query({
@@ -73,71 +107,72 @@ async function updatePost(id, request, response) {
         UPDATE posts
            SET title = COALESCE($2, title),
                content = COALESCE($3, content),
-               author = COALESCE($4, author),
-               category_id = COALESCE($5, category_id),
+               category_id = CASE WHEN $4::boolean THEN $5::uuid ELSE category_id END,
                updated_at = NOW()
          WHERE id = $1
-         RETURNING id, title, content, author, created_at, updated_at, category_id;
+         RETURNING id, title, content, author, created_at, updated_at, category_id, user_id AS owner_id;
       `,
       values: [
         id,
-        title || null,
-        content || null,
-        author || null,
+        title !== undefined ? title.trim() : null,
+        content !== undefined ? content.trim() : null,
+        Object.prototype.hasOwnProperty.call(request.body || {}, "categoryId"),
         categoryId || null,
       ],
     });
 
-    if (result.rows.length === 0) {
-      return response.status(404).json({ error: "Post not found" });
-    }
-
     const post = result.rows[0];
+
     if (post.category_id) {
       const categoryResult = await database.query({
         text: "SELECT name FROM categories WHERE id = $1 LIMIT 1;",
         values: [post.category_id],
       });
       post.category = categoryResult.rows[0]?.name || null;
+    } else {
+      post.category = null;
     }
 
-    response.status(200).json(post);
+    return response.status(200).json(post);
   } catch (error) {
     console.error(error);
-    response.status(500).json({ error: "Failed to update post" });
+    return response.status(500).json({ error: "Falha ao atualizar post." });
   }
 }
 
 async function deletePost(id, request, response) {
   const user = await getUserFromHeaders(request.headers);
+
+  if (!user) {
+    return response.status(401).json({ error: "Não autorizado." });
+  }
+
   try {
     const existing = await database.query({
       text: "SELECT user_id FROM posts WHERE id = $1 LIMIT 1;",
       values: [id],
     });
+
     if (existing.rows.length === 0) {
-      return response.status(404).json({ error: "Post not found" });
-    }
-    const ownerId = existing.rows[0].user_id;
-    if (
-      !user ||
-      (user.id !== ownerId && !userHasRole(user, ["admin", "moderator"]))
-    ) {
-      return response.status(403).json({ error: "Não autorizado" });
+      return response.status(404).json({ error: "Post não encontrado." });
     }
 
-    const result = await database.query({
-      text: "DELETE FROM posts WHERE id = $1 RETURNING id;",
+    const ownerId = existing.rows[0].user_id;
+    if (
+      user.id !== ownerId &&
+      !userHasRole(user, ["admin", "moderator"])
+    ) {
+      return response.status(403).json({ error: "Não autorizado." });
+    }
+
+    await database.query({
+      text: "DELETE FROM posts WHERE id = $1;",
       values: [id],
     });
 
-    if (result.rows.length === 0) {
-      return response.status(404).json({ error: "Post not found" });
-    }
-
-    response.status(204).end();
+    return response.status(204).end();
   } catch (error) {
     console.error(error);
-    response.status(500).json({ error: "Failed to delete post" });
+    return response.status(500).json({ error: "Falha ao excluir post." });
   }
 }
