@@ -52,7 +52,16 @@ export default async function handler(request, response) {
 
     response.status(201).json({ user, token });
   } catch (error) {
-    console.error(error);
-    response.status(500).json({ error: "Falha ao criar usuário." });
+    const safeCode = error?.code || "UNKNOWN";
+    console.error("[auth/register] failed:", {
+      code: safeCode,
+      name: error?.name,
+      message: error?.message,
+    });
+
+    response.status(500).json({
+      error: "Falha ao criar usuário.",
+      error_code: safeCode,
+    });
   }
 }
