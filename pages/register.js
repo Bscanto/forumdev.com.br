@@ -31,7 +31,10 @@ export default function Register() {
 
       const body = await response.json();
       if (!response.ok) {
-        throw new Error(body.error || "Falha ao registrar.");
+        const technicalCode = body.error_code ? ` (${body.error_code})` : "";
+        throw new Error(
+          `${body.error || "Falha ao registrar."}${technicalCode}`,
+        );
       }
 
       setAuthData({ token: body.token, user: body.user });
