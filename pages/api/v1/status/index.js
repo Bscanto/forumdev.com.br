@@ -1,6 +1,37 @@
 import database from "infra/database.js";
 
+function getDatabaseConnectionMode() {
+  const databaseUrl = process.env.DATABASE_URL;
+
+  if (!databaseUrl) {
+    return "legacy_postgres_env";
+  }
+
+  try {
+    const url = new URL(databaseUrl);
+    const hostname = url.hostname || "";
+
+    if (hostname.includes("pooler.supabase.com") && url.port === "6543") {
+      return "supabase_transaction_pooler";
+    }
+
+    if (hostname.includes("pooler.supabase.com") && url.port === "5432") {
+      return "supabase_session_pooler";
+    }
+
+    if (hostname.includes("supabase.co")) {
+      return "supabase_direct";
+    }
+
+    return "database_url";
+  } catch {
+    return "invalid_database_url";
+  }
+}
+
 async function status(request, response) {
+  const connectionMode = getDatabaseConnectionMode();
+
   try {
     const updatedAt = new Date().toISOString();
 
@@ -21,17 +52,15 @@ async function status(request, response) {
       values: [databaseName],
     });
 
-    const databaseOpenConnectionsValue =
-      databaseOpenConnectionsResult.rows[0].count;
-
     return response.status(200).json({
       updated_at: updatedAt,
       dependencies: {
         database: {
           status: "healthy",
+          connection_mode: connectionMode,
           version: databaseVersionValue,
           max_connections: parseInt(databaseMaxConnectionsValue, 10),
-          opened_connections: databaseOpenConnectionsValue,
+          opened_connections: databaseOpenConnectionsResult.rows[0].count,
         },
       },
     });
@@ -43,6 +72,7 @@ async function status(request, response) {
       name: safeName,
       code: safeCode,
       message: error?.message,
+      connectionMode,
     });
 
     return response.status(503).json({
@@ -50,6 +80,7 @@ async function status(request, response) {
       dependencies: {
         database: {
           status: "unhealthy",
+          connection_mode: connectionMode,
           error_code: safeCode,
           error_type: safeName,
         },
